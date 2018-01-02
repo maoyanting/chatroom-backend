@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface ChatService {
     /**
-     * 新建群聊
+     * 新建群聊吧
      * @param chatGroupName
      * @param userId
      */
