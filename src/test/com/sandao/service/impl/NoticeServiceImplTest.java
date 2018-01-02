@@ -48,7 +48,7 @@ public class NoticeServiceImplTest extends BaseTest {
     }
 
     /**
-     * Method: setFriendRequestDao(FriendRequestDao friendRequestDao)
+     * Method: setFriendRequestDao(FriendRequestDao friendRequestDao) 搞事情2
      */
     @Test
     public void testSetFriendRequestDao() throws Exception {
