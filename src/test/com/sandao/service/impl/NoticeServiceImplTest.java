@@ -40,7 +40,7 @@ public class NoticeServiceImplTest extends BaseTest {
     }
 
     /**
-     * Method: setUserMappingDao(UserMappingDao userMappingDao)
+     * Method: setUserMappingDao(UserMappingDao userMappingDao) 搞事情
      */
     @Test
     public void testSetUserMappingDao() throws Exception {
