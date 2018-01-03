@@ -24,6 +24,7 @@ import java.util.List;
 public class PersonalInformationController extends BaseController{
 
     private UserServiceImpl userService;
+    JsonDemo jsonDemo;
 
     @Autowired
     public void setUserService(UserServiceImpl userService){this.userService = userService;}
@@ -33,16 +34,15 @@ public class PersonalInformationController extends BaseController{
      * @param userId
      * @return
      */
-    @RequestMapping(value = "/myself", method = RequestMethod.GET)
-    public String getUserInformation(@RequestParam(value="userId") int userId){
-        User user = userService.getUserById(userId);
-        JsonDemo jsonDemo;
+    @RequestMapping(value = "/getMyself", method = RequestMethod.GET)
+    public void getUserInformation(HttpServletRequest request,HttpServletResponse response){
+        User user = getSessionUser(request);
         if (user == null) {
             jsonDemo = new JsonDemo(null,0,"用户不存在");
         } else {
             jsonDemo = new JsonDemo(user,1,"ok");
         }
-        return JSON.toJSONString(jsonDemo);
+        RespUtils.writeJson(response,jsonDemo);
     }
     /**
      * 修改密码
@@ -55,7 +55,6 @@ public class PersonalInformationController extends BaseController{
         String oldPassword = request.getParameter("oldPassword");
         String newPassword = request.getParameter("newPassword");
         String userName = request.getParameter("userName");
-        JsonDemo jsonDemo;
         SimpleUser simpleUser = userService.getSimpleUserByUserName(userName);
         if (!simpleUser.getPassword().equals(oldPassword)){
             jsonDemo = new JsonDemo(null,0,"旧的密码输入错误");
@@ -84,7 +83,6 @@ public class PersonalInformationController extends BaseController{
         user.setHeadshot(headshot);
         user.setIntroduction(introduction);
 
-        JsonDemo jsonDemo;
         try {
             userService.update(user);
             jsonDemo = new JsonDemo(user,1,"ok");
@@ -97,7 +95,6 @@ public class PersonalInformationController extends BaseController{
     @RequestMapping(value = "/getUsers")
     public void getAllUsers(HttpServletResponse response){
         List<User> myFriends = userService.getAllUsers();
-        JsonDemo jsonDemo;
         if (myFriends == null) {
             jsonDemo = new JsonDemo(null, 0, "获取失败");
         } else {

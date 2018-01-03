@@ -53,8 +53,9 @@ public class FriendsController extends BaseController {
      * @param response
      */
     @RequestMapping(value = "/friendList", method = RequestMethod.POST)
-    public void friendList(@RequestBody SimpleUser user, HttpServletResponse response) {
-        int userId = user.getUserId();
+    public void friendList(@RequestBody SimpleUser user,HttpServletRequest request, HttpServletResponse response) {
+        User userIn = getSessionUser(request);
+        int userId = userIn.getUserId();
         List<User> myFriends = userService.getUserFriends(userId);
         if (myFriends.size() == 0) {
             jsonDemo = new JsonDemo(null, 0, "没有好友");

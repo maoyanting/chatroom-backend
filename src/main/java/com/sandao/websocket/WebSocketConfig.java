@@ -1,6 +1,7 @@
 package com.sandao.websocket;
 
 import com.sandao.service.impl.SystemWebSocketHandler;
+import com.sandao.web.WebSocketHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.*;
@@ -19,6 +20,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
      */
     @Autowired
     private SystemWebSocketHandler systemWebSocketHandler;
+    @Autowired
+    private WebSocketHandshakeInterceptor webSocketHandshakeInterceptor;
 
 
     @Override
@@ -26,7 +29,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
         //注册实现类，设置访问WebSocket的地址
         //注册拦截器
         webSocketHandlerRegistry.addHandler(systemWebSocketHandler,"/ws")
-                .addInterceptors(new HttpSessionHandshakeInterceptor()).setAllowedOrigins("http://localhost:8000");
+                .addInterceptors(webSocketHandshakeInterceptor).setAllowedOrigins("http://localhost:8000");
     }
 
 }

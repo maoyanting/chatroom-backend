@@ -64,7 +64,6 @@ public class LoginController extends BaseController {
         logger.info("userName:{}",userName);
         logger.info("password:{}",password);
         logger.info(JSON.toJSONString(jsonDemo));
-        logger.info(JSON.toJSONString(getSessionUser(request)));
         RespUtils.writeJson(response,jsonDemo);
     }
     /**
