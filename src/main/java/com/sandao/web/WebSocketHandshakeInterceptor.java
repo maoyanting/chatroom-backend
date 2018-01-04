@@ -25,8 +25,10 @@ public class WebSocketHandshakeInterceptor extends BaseController implements Han
     @Override
     public boolean beforeHandshake(ServerHttpRequest serverHttpRequest, ServerHttpResponse serverHttpResponse, WebSocketHandler webSocketHandler, Map<String, Object> map) throws Exception {
         if (serverHttpRequest instanceof ServletServerHttpRequest) {
+            //类型转换
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) serverHttpRequest;
             HttpSession session = servletRequest.getServletRequest().getSession(false);
+            //获取user
             User user = getSessionUser(servletRequest.getServletRequest());
             if (session != null) {
                 map.put(WEBSOCKET_USERID, user.getUserId());

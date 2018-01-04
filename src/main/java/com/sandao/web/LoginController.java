@@ -61,21 +61,25 @@ public class LoginController extends BaseController {
             jsonDemo = new JsonDemo(loginUser,1,"ok");
         }
         logger.info("--------Login In---------");
-        logger.info("userName:{}",userName);
-        logger.info("password:{}",password);
         logger.info(JSON.toJSONString(jsonDemo));
         RespUtils.writeJson(response,jsonDemo);
     }
+
     /**
-     * 登录注销
-     *
-     * @param session
-     * @return
+     * 注销登录
+     * @param request
+     * @param response
      */
     @RequestMapping("/logout")
-    public String logout(HttpSession session) {
-        session.removeAttribute(USER_CONTEXT);
-        return "forward:/index.jsp";
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        try{
+            request.getSession().removeAttribute(USER_CONTEXT);
+            jsonDemo = new JsonDemo(null,1,"登出成功");
+            logger.info("Login Out---------");
+        }catch (Exception e){
+            jsonDemo = new JsonDemo(null,0,"登出失败");
+        }
+        RespUtils.writeJson(response,jsonDemo);
     }
 
     /**

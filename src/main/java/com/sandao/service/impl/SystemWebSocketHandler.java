@@ -158,7 +158,8 @@ public class SystemWebSocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus closeStatus) throws Exception {
         //移除当前用户终端登录的websocket信息,如果该用户的所有终端都下线了，则删除该用户的记录
-        for (int userId : webSocketSessionMap.keySet()) {
+        Set<Integer> set = webSocketSessionMap.keySet();
+        for (int userId : set) {
             //获取终端
             Set<WebSocketSession> webSocketSessionSet = webSocketSessionMap.get(userId);
             //和当前终端session对比
