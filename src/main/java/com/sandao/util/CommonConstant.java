@@ -11,6 +11,10 @@ public class CommonConstant {
     /**
      * 用户对象放到Session中的键名称
      */
+    public static final String WEBSOCKET_USERID = "WEB_SOCKET_USER_ID";
+    /**
+     * 用户对象放到Session中的键名称
+     */
     public static final String SIMPLE_USER_CONTEXT = "SIMPLE_USER_CONTEXT";
     /**
      * 将登录前的URL放到Session中的键名称

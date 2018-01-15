@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
@@ -74,9 +75,10 @@ public class ChatGroupController extends BaseController {
      * @param response
      */
     @RequestMapping(value = "/chatGroupList", method = RequestMethod.POST)
-    public void getChatGroupList(@RequestBody SimpleUser user,
+    public void getChatGroupList(@RequestBody SimpleUser user,HttpServletRequest request,
                                  HttpServletResponse response) {
-        int userId = user.getUserId();
+        User userIn = getSessionUser(request);
+        int userId = userIn.getUserId();
         List<ChatGroup> myChatGroups = userService.getUserChatGroup(userId);
         if (myChatGroups.size() == 0) {
             jsonDemo = new JsonDemo(null, 0, "没有群");
@@ -148,22 +150,42 @@ public class ChatGroupController extends BaseController {
     }
 
     /**
-     * 用户退出群
-     *
-     * @param userId
-     * @param chatGroupId
-     * @return
+     * 用户主动退群。
+     * @param userGroupMapping 用户和群的关系
+     * @param response
      */
     @RequestMapping(value = "/quitChatGroup")
-    public String quitChatGroup(@RequestParam(value = "userId") Integer userId,
-                                @RequestParam(value = "chatGroupId") Integer chatGroupId) {
+    public void quitChatGroup(@RequestBody UserGroupMapping userGroupMapping,HttpServletResponse response) {
         try {
+            int userId = userGroupMapping.getUserId();
+            int chatGroupId = userGroupMapping.getChatGroupId();
             chatService.quitChatGroup(userId, chatGroupId);
-            ChatGroup chatGroup = chatService.getChatGroupByChatGroupId(chatGroupId);
-            jsonDemo = new JsonDemo(chatGroup, 1, "删除用户成功");
+            jsonDemo = new JsonDemo(null, 1, "用户主动退群成功");
+            logger.info("--------------quit chat group success--------------");
         } catch (Exception e) {
-            jsonDemo = new JsonDemo(null, 1, "删除用户失败");
+            logger.error("--------------quit chat group wrong--------------");
+            jsonDemo = new JsonDemo(null, 0, "用户主动退群失败");
         }
-        return JSON.toJSONString(jsonDemo);
+        RespUtils.writeJson(response,jsonDemo);
+    }
+    @RequestMapping(value = "/joinChatGroup")
+    public void joinChatGroup(@RequestBody UserGroupMapping userGroupMapping,HttpServletRequest request,HttpServletResponse response) {
+        try {
+            User user = getSessionUser(request);
+            int userId = user.getUserId();
+            int chatGroupId = userGroupMapping.getChatGroupId();
+            if(chatService.userIsInGroup(userId,chatGroupId)){
+                jsonDemo = new JsonDemo(null, 2, "用户已经是这个群的成员");
+                logger.info("--------------join chat group wrong--------------");
+            }else {
+                chatService.addUserToGroup(userId,chatGroupId);
+                jsonDemo = new JsonDemo(null, 1, "用户加入群成功");
+                logger.info("--------------join chat group success--------------");
+            }
+        } catch (Exception e) {
+            logger.error("--------------join chat group wrong--------------");
+            jsonDemo = new JsonDemo(null, 0, "用户加入群失败");
+        }
+        RespUtils.writeJson(response,jsonDemo);
     }
 }

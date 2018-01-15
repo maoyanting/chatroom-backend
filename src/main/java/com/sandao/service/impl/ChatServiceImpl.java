@@ -60,29 +60,50 @@ public class ChatServiceImpl implements ChatService {
         addUserToGroup(userId,chatGroupId);
     }
 
+    /**
+     * 删除群聊（在群主退群的情况下）
+     * @param chatGroup
+     */
     @Override
     public void deleteChatGroup(ChatGroup chatGroup) {
         chatGroup.setGroupType(0);
         chatGroupDao.updateByPrimaryKeySelective(chatGroup);
     }
 
+    /**
+     * 根据群id获取群内的用户
+     * @param chatGroupId
+     * @return
+     */
     @Override
     public List<User> getUsersByChatGroupId(int chatGroupId) {
         List<UserGroupMapping> userGroupMappings = userGroupMappingDao.getAllMappingByChatGroupId(chatGroupId);
         LinkedList<User> users = new LinkedList<>();
         userGroupMappings.forEach(userGroupMapping -> {
             if (userGroupMapping.getMappingStat() == 1) {
-                users.add(userDao.selectByPrimaryKey(userGroupMapping.getUserId()));
+                int userId = userGroupMapping.getUserId();
+                users.add(userDao.selectByPrimaryKey(userId));
             }
         });
         return users;
     }
 
+    /**
+     * 根据群id获取群
+     * @param chatGroupId
+     * @return
+     */
     @Override
     public ChatGroup getChatGroupByChatGroupId(int chatGroupId) {
         return chatGroupDao.selectByPrimaryKey(chatGroupId);
     }
-
+    /**
+     * 退出群聊
+     * 先获取并修改userGroupMapping，保存
+     * 再获取这个chatGroup，判断user是否是群主，是（群主顺延，无法顺延则删除群），否（无操作）
+     * @param userId
+     * @param chatGroupId
+     */
     @Override
     public void quitChatGroup(int userId, int chatGroupId) {
         UserGroupMapping userGroupMapping = userGroupMappingDao.getUserGroupMappingById(userId, chatGroupId);
@@ -91,8 +112,8 @@ public class ChatServiceImpl implements ChatService {
         ChatGroup chatGroup = chatGroupDao.selectByPrimaryKey(chatGroupId);
         if (userId == chatGroup.getOwnerId()) {
             List<User> users = getUsersByChatGroupId(chatGroupId);
-            //最后一个用户，删除群
-            if (users.get(1) == null) {
+            //没有剩下的用户了，删除群
+            if (users.size() ==0) {
                 deleteChatGroup(chatGroup);
             } else {
                 //还有别的用户，群主顺延
@@ -101,26 +122,11 @@ public class ChatServiceImpl implements ChatService {
             }
         }
     }
-
-    @Override
-    public void sendMessageToUser(int userId, TextMessage message) {
-//        SystemWebSocketHandler handler = new SystemWebSocketHandler();
-//        handler.sendMessageToUser(userId, message);
-    }
-
-    @Override
-    public int sendMessageToGroup(int chatGroupId, TextMessage message) {
-        List<User> users = getUsersByChatGroupId(chatGroupId);
-        try {
-            for (User user : users) {
-                sendMessageToUser(user.getUserId(), message);
-            }
-            return 1;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
+    /**
+     * 把用户添加进群
+     * @param userId
+     * @param chatGroupId
+     */
     @Override
     public void addUserToGroup(int userId, int chatGroupId) {
         UserGroupMapping userGroupMapping = new UserGroupMapping();
@@ -131,30 +137,64 @@ public class ChatServiceImpl implements ChatService {
         userGroupMappingDao.insertSelective(userGroupMapping);
     }
 
+    /**
+     * 判断用户是否在群里面
+     * @param userId
+     * @param chatGroupId
+     */
+    @Override
+    public boolean userIsInGroup(int userId, int chatGroupId) {
+        UserGroupMapping userGroupMapping = userGroupMappingDao.getUserGroupMappingById(userId, chatGroupId);
+        if (userGroupMapping != null){
+            return true;
+        }else {
+            return false;
+        }
+    }
+    /**
+     * 根据群名获取群
+     * @param chatGroupName
+     * @return
+     */
     @Override
     public ChatGroup getChatGroupByChatGroupName(String chatGroupName) {
         return chatGroupDao.getChatGroupByGroupName(chatGroupName);
     }
-
+    /**
+     * 根据群名获取群id
+     * @param chatGroupName
+     * @return
+     */
     @Override
     public int getChatGroupIdByChatGroupName(String chatGroupName) {
         return getChatGroupByChatGroupName(chatGroupName).getChatGroupId();
     }
-
+    /**
+     * 修改群名（要求是群主）
+     * @param chatGroupId
+     * @param newName
+     */
     @Override
     public void editChatGroupName(int chatGroupId, String newName) {
         ChatGroup chatGroup = chatGroupDao.selectByPrimaryKey(chatGroupId);
         chatGroup.setChatGroupName(newName);
         chatGroupDao.updateByPrimaryKeySelective(chatGroup);
     }
-
+    /**
+     * 修改群主
+     * @param chatGroupId
+     * @param newOwnerId
+     */
     @Override
     public void editOwner(int chatGroupId, int newOwnerId) {
         ChatGroup chatGroup = chatGroupDao.selectByPrimaryKey(chatGroupId);
         chatGroup.setOwnerId(newOwnerId);
         chatGroupDao.updateByPrimaryKeySelective(chatGroup);
     }
-
+    /**
+     * 获取所有的群
+     * @return
+     */
     @Override
     public List<ChatGroup> getAllChatGroup() {
         return chatGroupDao.getAll();

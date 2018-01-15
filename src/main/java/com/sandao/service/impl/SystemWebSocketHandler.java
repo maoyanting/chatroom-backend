@@ -33,7 +33,10 @@ public class SystemWebSocketHandler implements WebSocketHandler {
     public void setNoticeService(NoticeServiceImpl noticeService) {
         this.noticeService = noticeService;
     }
-
+    @Autowired
+    public void setChatService(ChatServiceImpl chatService) {
+        this.chatService = chatService;
+    }
     @Autowired
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
@@ -56,6 +59,15 @@ public class SystemWebSocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
         logger.info("-----------webSocket is connect----------");
+        int userId = (Integer) webSocketSession.getAttributes().get(WEBSOCKET_USERID);
+        if (webSocketSessionMap.containsKey(userId)) {
+            webSocketSessionMap.get(userId).add(webSocketSession);
+        } else {
+            Set<WebSocketSession> addUserSet = new HashSet<>();
+            addUserSet.add(webSocketSession);
+            webSocketSessionMap.put(userId, addUserSet);
+        }
+        System.out.println("用户id为：" + userId + "的webSocket链接成功");
     }
 
     /**
@@ -80,18 +92,6 @@ public class SystemWebSocketHandler implements WebSocketHandler {
             logger.info("personal chat");
             logger.info(userFromId + "send to" + userToId + ":" + message);
             sendMessageToUser(userToId, (TextMessage) webSocketMessage);
-        } else if (messageType == MESSAGE_TYPE_SESSION) {
-            /*  获取session */
-            int userToId = (int) jsonObject.get("userId");
-            logger.info("to make Session");
-            if (webSocketSessionMap.containsKey(userToId)) {
-                webSocketSessionMap.get(userToId).add(webSocketSession);
-            } else {
-                Set<WebSocketSession> addUserSet = new HashSet<>();
-                addUserSet.add(webSocketSession);
-                webSocketSessionMap.put(userToId, addUserSet);
-            }
-            System.out.println("用户id为：" + userToId + "的webSocket链接成功");
         } else if (messageType == MESSAGE_TYPE_FRIEND_REQUEST){
             /* 发送的好友请求 */
             logger.info("friend request");
@@ -117,8 +117,14 @@ public class SystemWebSocketHandler implements WebSocketHandler {
             }else {
                 sendMessageToUser(initiatorId, (TextMessage) webSocketMessage);
             }
-        }else {
+        }else if(messageType == MESSAGE_TYPE_CHAT_GROUP){
             logger.info("group chat");
+            /* 群聊信息 */
+            int chatGroupId = (int) jsonObject.get("chatGroupId");
+            int userFromId = (int) jsonObject.get("userFromId");
+            String message = (String) jsonObject.get("message");
+            logger.info(userFromId + "send to" + chatGroupId + ":" + message);
+            sendMessageToGroup(chatGroupId, (TextMessage) webSocketMessage);
         }
     }
 
@@ -152,7 +158,8 @@ public class SystemWebSocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession webSocketSession, CloseStatus closeStatus) throws Exception {
         //移除当前用户终端登录的websocket信息,如果该用户的所有终端都下线了，则删除该用户的记录
-        for (int userId : webSocketSessionMap.keySet()) {
+        Set<Integer> set = webSocketSessionMap.keySet();
+        for (int userId : set) {
             //获取终端
             Set<WebSocketSession> webSocketSessionSet = webSocketSessionMap.get(userId);
             //和当前终端session对比
@@ -205,10 +212,15 @@ public class SystemWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    public void sendMessageToGroup(int userToId, TextMessage message) {
+    /**
+     * 群聊发送
+     * @param chatGroupId
+     * @param message
+     */
+    public void sendMessageToGroup(int chatGroupId, TextMessage message) {
         //获取所有的群用户
-        List<User> users = chatService.getUsersByChatGroupId(userToId);
         try {
+            List<User> users = chatService.getUsersByChatGroupId(chatGroupId);
             for (User user : users) {
                 //遍历群用户
                 int userId = user.getUserId();

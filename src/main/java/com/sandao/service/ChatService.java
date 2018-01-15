@@ -44,24 +44,17 @@ public interface ChatService {
     void quitChatGroup(int userId,int chatGroupId);
 
     /**
-     * 发送私聊
-     * @param userId
-     * @param message
-     */
-    void sendMessageToUser(int userId, TextMessage message) ;
-    /**
-     * 发送群聊
-     * @param chatGroupId
-     * @param message
-     * @return
-     */
-    int sendMessageToGroup(int chatGroupId,TextMessage message);
-    /**
      * 添加新用户进群
      * @param userId
      * @param chatGroupId
      */
     void addUserToGroup(int userId,int chatGroupId) ;
+    /**
+     * 判断用户是否已经在群里
+     * @param userId
+     * @param chatGroupId
+     */
+    boolean userIsInGroup(int userId,int chatGroupId);
     /**
      * 根据群名获取群
      * @param chatGroupName
